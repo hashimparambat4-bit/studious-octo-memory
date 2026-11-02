@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'HASHIM_Nursing_V10_5_Firebase_Connected.zip'
+      - 'HASHIM_Nursing_V10_5_Feedback_Replies_Admin_Panel_Verified_Email.zip'
       - '.github/workflows/build-apk.yml'
 
 permissions:
@@ -28,9 +28,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Extract project
+      - name: Extract updated project
         run: |
-          unzip -q HASHIM_Nursing_V10_5_Firebase_Connected.zip -d project
+          unzip -q HASHIM_Nursing_V10_5_Feedback_Replies_Admin_Panel_Verified_Email.zip -d project
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
@@ -40,18 +40,12 @@ jobs:
       - name: Build APK
         working-directory: project/android-app
         run: |
-          if [ -f gradlew ]; then
-            chmod +x gradlew
-            sed -i 's/gradle-[0-9.]*-all.zip/gradle-8.9-all.zip/' gradle/wrapper/gradle-wrapper.properties
-            ./gradlew --no-daemon clean assembleDebug
-          else
-            gradle --no-daemon clean assembleDebug
-          fi
+          gradle --no-daemon clean assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HASHIM-Nursing-V10.5-Firebase-APK
+          name: HASHIM-Nursing-V10.5-Admin-Panel-APK
           path: project/android-app/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
