@@ -2,7 +2,6 @@ name: Build HASHIM Nursing APK
 
 on:
   workflow_dispatch:
-
   push:
     branches:
       - main
@@ -29,50 +28,43 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Extract Firebase Connected Project
+      - name: Extract project
         run: |
           unzip -q HASHIM_Nursing_V10_5_Firebase_Connected.zip -d project
+          find project -maxdepth 5 -type f | head -100
 
-          echo "Extracted project files:"
-          ls -la project
-
-      - name: Locate Android Project
+      - name: Locate Android project
         run: |
-          GRADLEW=$(find project -name gradlew -type f | head -n 1)
+          DIR=$(find project -name settings.gradle -o -name settings.gradle.kts | head -1)
 
-          if [ -z "$GRADLEW" ]; then
-            echo "Gradle wrapper not found!"
+          if [ -z "$DIR" ]; then
+            echo "ERROR: No Gradle settings file found."
             exit 1
           fi
 
-          ANDROID_DIR=$(dirname "$GRADLEW")
+          ANDROID_DIR=$(dirname "$DIR")
           echo "ANDROID_DIR=$ANDROID_DIR" >> $GITHUB_ENV
 
-          chmod +x "$GRADLEW"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
 
-      - name: Build HASHIM Nursing APK
+      - name: Build APK
         run: |
           cd "$ANDROID_DIR"
-          ./gradlew --no-daemon clean assembleDebug
 
-      - name: Verify APK
-        run: |
-          APK=$(find project -path '*/app/build/outputs/apk/debug/app-debug.apk' | head -n 1)
-
-          if [ -z "$APK" ]; then
-            echo "APK build failed!"
-            exit 1
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew clean assembleDebug
+          else
+            gradle clean assembleDebug
           fi
-
-          echo "APK successfully generated: $APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: HASHIM-Nursing-V10.5-Firebase-APK
-          path: project/**/app/build/outputs/apk/debug/app-debug.apk
+          path: project/**/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
