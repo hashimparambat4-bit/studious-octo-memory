@@ -2,11 +2,12 @@ name: Build HASHIM Nursing APK
 
 on:
   workflow_dispatch:
+
   push:
     branches:
       - main
     paths:
-      - 'HASHIM_Nursing_V10_4_Learning_Features.zip'
+      - 'HASHIM_Nursing_V10_5_Achievements_Medal_Icon.zip'
       - '.github/workflows/build-apk.yml'
 
 permissions:
@@ -14,7 +15,9 @@ permissions:
 
 jobs:
   build:
+    name: Build HASHIM Nursing V10.5
     runs-on: ubuntu-latest
+    timeout-minutes: 40
 
     steps:
       - name: Checkout repository
@@ -26,19 +29,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Extract HASHIM Nursing
+      - name: Extract HASHIM Nursing V10.5
         run: |
-          unzip -q HASHIM_Nursing_V10_4_Learning_Features.zip -d project
+          unzip -q HASHIM_Nursing_V10_5_Achievements_Medal_Icon.zip -d project
 
       - name: Build APK
         working-directory: project/android-app
         run: |
-          gradle --no-daemon assembleDebug
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew --no-daemon assembleDebug
+          else
+            gradle --no-daemon assembleDebug
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HASHIM-Nursing-V10.4-APK
+          name: HASHIM-Nursing-V10.5-APK
           path: project/android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
