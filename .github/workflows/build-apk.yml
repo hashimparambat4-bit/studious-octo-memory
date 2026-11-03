@@ -1,4 +1,4 @@
-name: Build HASHIM Nursing APK
+name: Build HASHIM Nursing V10.6 APK
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'HASHIM_Nursing_V10_5_Feedback_Replies_Admin_Panel_Verified_Email.zip'
+      - 'HASHIM_Nursing_V10_6_Private_Feedback_Chat.zip'
       - '.github/workflows/build-apk.yml'
 
 permissions:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Build HASHIM Nursing V10.5
+    name: Build HASHIM Nursing V10.6
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -30,7 +30,7 @@ jobs:
 
       - name: Extract updated project
         run: |
-          unzip -q HASHIM_Nursing_V10_5_Feedback_Replies_Admin_Panel_Verified_Email.zip -d project
+          unzip -q HASHIM_Nursing_V10_6_Private_Feedback_Chat.zip -d project
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
@@ -45,7 +45,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HASHIM-Nursing-V10.5-Admin-Panel-APK
+          name: HASHIM-Nursing-V10.6-Private-Feedback-Chat-APK
           path: project/android-app/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
