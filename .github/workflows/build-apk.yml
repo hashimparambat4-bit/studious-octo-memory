@@ -1,4 +1,4 @@
-name: Build HASHIM Nursing V10.7 APK
+name: Build HASHIM Nursing V10.8 APK
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'HASHIM_Nursing_V10_7_Private_Feedback_Chat_Fixed.zip'
+      - 'HASHIM_Nursing_V10_8_Firebase_API_Key_Fix.zip'
       - '.github/workflows/build-apk.yml'
 
 permissions:
@@ -14,38 +14,34 @@ permissions:
 
 jobs:
   build:
-    name: Build HASHIM Nursing V10.7
+    name: Build HASHIM Nursing V10.8
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Extract updated project
+      - name: Extract project
         run: |
-          unzip -q HASHIM_Nursing_V10_7_Private_Feedback_Chat_Fixed.zip -d project
+          unzip -q HASHIM_Nursing_V10_8_Firebase_API_Key_Fix.zip -d project
 
-      - name: Set up Gradle 8.9
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
       - name: Build APK
         working-directory: project/android-app
-        run: |
-          gradle --no-daemon clean assembleDebug
+        run: gradle --no-daemon clean assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HASHIM-Nursing-V10.7-Firebase-Fixed-APK
+          name: HASHIM-Nursing-V10.8-APK
           path: project/android-app/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
