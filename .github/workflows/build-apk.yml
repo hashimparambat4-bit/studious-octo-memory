@@ -32,13 +32,34 @@ jobs:
         run: |
           unzip -q HASHIM_Nursing_V10_9_Public_Release_Setup.zip -d project
 
-      - name: Prepare signing key
+      - name: Convert PKCS12 to JKS
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          OLD_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          OLD_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          NEW_PASSWORD: ${{ secrets.ANDROID_JKS_PASSWORD }}
         run: |
-          test -n "$KEYSTORE_B64" || exit 1
-          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.p12"
-          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.p12" >> "$GITHUB_ENV"
+          set -e
+
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/original.p12"
+
+          keytool -importkeystore \
+            -srckeystore "$RUNNER_TEMP/original.p12" \
+            -srcstoretype PKCS12 \
+            -srcstorepass "$OLD_STORE_PASSWORD" \
+            -srcalias "$KEY_ALIAS" \
+            -srckeypass "$OLD_KEY_PASSWORD" \
+            -destkeystore "$RUNNER_TEMP/release.jks" \
+            -deststoretype JKS \
+            -deststorepass "$NEW_PASSWORD" \
+            -destkeypass "$NEW_PASSWORD" \
+            -destalias "$KEY_ALIAS" \
+            -noprompt
+
+          rm "$RUNNER_TEMP/original.p12"
+
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
@@ -48,9 +69,9 @@ jobs:
       - name: Build signed Release APK
         working-directory: project/android-app
         env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_JKS_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_JKS_PASSWORD }}
         run: |
           gradle --no-daemon clean assembleRelease
 
