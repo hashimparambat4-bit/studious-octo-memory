@@ -1,4 +1,4 @@
-name: Build HASHIM Nursing V10.9 APK
+name: HASHIM Nursing Public Release
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'HASHIM_Nursing_V10_9_Feedback_Inbox_Fix.zip'
+      - 'HASHIM_Nursing_V10_9_Public_Release_Setup.zip'
       - '.github/workflows/build-apk.yml'
 
 permissions:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    name: Build HASHIM Nursing V10.9
+    name: Build Signed Release APK
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -28,24 +28,36 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Extract updated project
+      - name: Extract Android project
         run: |
-          unzip -q HASHIM_Nursing_V10_9_Feedback_Inbox_Fix.zip -d project
+          unzip -q HASHIM_Nursing_V10_9_Public_Release_Setup.zip -d project
+
+      - name: Prepare signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || exit 1
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.p12"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.p12" >> "$GITHUB_ENV"
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
+      - name: Build signed Release APK
         working-directory: project/android-app
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          gradle --no-daemon clean assembleDebug
+          gradle --no-daemon clean assembleRelease
 
-      - name: Upload APK
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: HASHIM-Nursing-V10.9-Private-Feedback-Chat-APK
-          path: project/android-app/app/build/outputs/apk/debug/*.apk
+          name: HASHIM-Nursing-Public-Release-10.9.1
+          path: project/android-app/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
